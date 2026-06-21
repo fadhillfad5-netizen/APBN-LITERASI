@@ -1,0 +1,809 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Alokasi Pajak APBN Indonesia</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons for dynamic representation -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Plus Jakarta Sans for premium visual feel -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .custom-gradient {
+      background: radial-gradient(circle at top, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0) 60%);
+    }
+    /* Simple keyframe animation for unstable state */
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-1deg) scale(0.99); }
+      75% { transform: rotate(1deg) scale(1.01); }
+    }
+    .unstable-wiggle {
+      animation: wiggle 0.4s ease-in-out infinite;
+    }
+    .transition-all-custom {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen custom-gradient antialiased">
+
+  <!-- HERO & TITLE SECTION -->
+  <header class="max-w-6xl mx-auto px-4 pt-12 pb-6 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100 text-xs font-semibold mb-4 tracking-wide shadow-sm">
+      <i data-lucide="sparkles" class="w-4 h-4"></i> Edukasi Interaktif APBN Indonesia (Edisi Bersuara 🔊)
+    </div>
+    <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+      Kepo gak sih, uang pajak yang kamu <br class="hidden md:block">
+      bayarin tiap hari <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">larinya ke mana? 🤔</span>
+    </h1>
+    <p class="mt-4 text-base md:text-lg text-slate-500 max-w-2xl mx-auto">
+      Daripada pusing denger istilah birokrasi rumit, yuk simulasiin langsung pengeluaran atau kontribusi pajakmu biar tahu kontribusi nyatamu buat Indonesia!
+    </p>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 pb-20 space-y-12">
+    
+    <!-- SECTION 1: USER INPUT BOX -->
+    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100 max-w-3xl mx-auto transition-all-custom hover:shadow-2xl">
+      <div class="flex flex-col md:flex-row items-stretch gap-4">
+        <!-- Input Nominal -->
+        <div class="relative flex-1">
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Simulasi Nominal Uang Pajak / Pengeluaranmu</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold text-xl">Rp</span>
+            <input 
+              type="text" 
+              id="pajakInput" 
+              value="100.000"
+              placeholder="Masukkan angka..."
+              class="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-bold text-slate-800 focus:outline-none focus:border-red-500 focus:bg-white transition-all shadow-inner"
+            />
+          </div>
+        </div>
+        <!-- Trigger Button -->
+        <div class="flex items-end">
+          <button 
+            id="btnCek" 
+            class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-500/20 hover:shadow-red-500/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <i data-lucide="calculator" class="w-5 h-5"></i> Cek Duitku
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Nominal Buttons -->
+      <div class="mt-4 flex flex-wrap gap-2 items-center justify-center md:justify-start">
+        <span class="text-xs font-semibold text-slate-400 mr-1">Pilihan Instan:</span>
+        <button onclick="setNominal(50000)" class="px-3.5 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 rounded-full hover:bg-red-50 hover:text-red-600 transition-all">Rp50 Ribu</button>
+        <button onclick="setNominal(100000)" class="px-3.5 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 rounded-full hover:bg-red-50 hover:text-red-600 transition-all">Rp100 Ribu</button>
+        <button onclick="setNominal(1000000)" class="px-3.5 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 rounded-full hover:bg-red-50 hover:text-red-600 transition-all">Rp1 Juta</button>
+        <button onclick="setNominal(15000000)" class="px-3.5 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 rounded-full hover:bg-red-50 hover:text-red-600 transition-all">Rp15 Juta</button>
+      </div>
+    </div>
+
+    <!-- SECTION 2: INTERACTIVE VISUALIZATION -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT GRAPHIC (Donut Chart) -->
+      <div class="lg:col-span-5 bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center justify-center min-h-[440px] transition-all-custom" id="chartCard">
+        <div class="w-full text-center mb-6">
+          <h3 class="text-lg font-bold text-slate-800" id="chartTitle">Kue Distribusi Alokasi</h3>
+          <p class="text-xs text-slate-400 mt-1">Klik pada bagian diagram atau list untuk melihat deskripsi riil</p>
+        </div>
+        
+        <!-- Canvas Wrapper -->
+        <div class="relative w-full max-w-[280px] md:max-w-[300px]" id="donutContainer">
+          <canvas id="pajakDonutChart"></canvas>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider" id="centerLabelTop">Porsi Kamu</span>
+            <span class="text-lg md:text-xl font-black text-slate-800" id="centerTotalLabel">Rp100.000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SECTORS BREAKDOWN & MICRO-COPY -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        
+        <!-- DYNAMIC DESCRIPTIVE BANNER -->
+        <div id="infoBanner" class="bg-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden transition-all duration-300 border-2 border-transparent">
+          <!-- Background decorative watermarks -->
+          <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5">
+            <i data-lucide="info" class="w-48 h-48"></i>
+          </div>
+          
+          <div class="relative z-10 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="inline-block px-2.5 py-1 rounded-full bg-red-500/20 text-red-300 text-[10px] font-bold uppercase tracking-wider" id="activeSectorBadge">
+                Sentuh / Pilih Sektor
+              </span>
+              <!-- Sound state indicator -->
+              <span class="text-[10px] text-slate-400 flex items-center gap-1">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i> Efek Suara Aktif
+              </span>
+            </div>
+            <h4 class="text-xl md:text-2xl font-black text-white" id="activeSectorTitle">Pilih Salah Satu Sektor</h4>
+            <p class="text-slate-300 text-sm md:text-base leading-relaxed font-medium" id="activeSectorDesc">
+              Gunakan daftar tombol sektor di bawah ini atau arahkan pointer ke diagram kue untuk membaca cerita nyata ke mana sepeser uang kontribusimu diimplementasikan oleh pemerintah.
+            </p>
+            
+            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
+              <span class="text-xs text-slate-400 font-bold uppercase tracking-wider" id="activeLabelBottom">Hasil Patunganmu:</span>
+              <span class="text-lg md:text-2xl font-black text-emerald-400" id="activeSectorValue">Rp0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTORS SELECTION GRID -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="sectorsContainer">
+          <!-- Dynamically injected cards go here -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION 3: MITOS VS REALITAS (SDA VS PAJAK) -->
+    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+        <div class="space-y-1">
+          <span class="inline-block px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-extrabold uppercase tracking-wide">
+            💡 Simulator Penyelamat Mitos
+          </span>
+          <h3 class="text-2xl font-extrabold text-slate-800">Kenapa Gak Pakai Sumber Daya Alam (SDA) Saja?</h3>
+          <p class="text-sm text-slate-500">Banyak yang beranggapan Indonesia punya alam berlimpah sehingga tak butuh pajak. Coba ganti sakelar di kanan!</p>
+        </div>
+        
+        <!-- Toggle Switch Simulator -->
+        <div class="bg-slate-100 p-1 rounded-2xl flex w-full md:w-auto shadow-inner border border-slate-200/40">
+          <button id="btnRealStructure" onclick="setSimulatorMode('real')" class="flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 bg-white text-slate-800 shadow-sm">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Struktur Pajak Nyata
+          </button>
+          <button id="btnSdaOnly" onclick="setSimulatorMode('sda')" class="flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800">
+            <i data-lucide="flame" class="w-4 h-4 text-orange-500"></i> Andalkan SDA Saja
+          </button>
+        </div>
+      </div>
+
+      <!-- Warning Box & Visual explanation -->
+      <div id="sdaSimulatorBox" class="mt-6 p-6 rounded-2xl transition-all-custom bg-slate-50 border border-slate-100">
+        
+        <!-- Normal State info -->
+        <div id="stateNormal" class="space-y-4">
+          <div class="flex gap-4 items-start">
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <i data-lucide="shield-check" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h4 class="text-lg font-bold text-slate-900">Pondasi APBN Kokoh & Seimbang (SDA + Pajak)</h4>
+              <p class="text-slate-600 text-sm mt-1 leading-relaxed">
+                Pajak menjadi jangkar kestabilan belanja negara. Saat harga komoditas tambang dunia bergoyang atau ekspor turun, negara tetap memiliki aliran dana rutin yang mandiri untuk menjaga fungsi pelayanan sosial agar tidak mandek mendadak. Hal inilah yang dilakukan negara maju demi kesejahteraan berkelanjutan.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SDA ONLY unstable state info -->
+        <div id="stateUnstable" class="hidden space-y-4">
+          <div class="flex gap-4 items-start">
+            <div class="p-3 bg-red-100 text-red-600 rounded-xl animate-bounce">
+              <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h4 class="text-lg font-bold text-red-700">Duh, Anggaran Negara Goyang & Layanan Publik Lumpuh! 📉</h4>
+              <p class="text-red-900/90 text-sm mt-1 leading-relaxed">
+                Aduh, harga komoditas alam itu naik turun dan bisa habis! Kalau cuma ngandelin SDA, anggaran sekolah dan subsidi bisa lumpuh total. Makanya negara maju (bahkan Arab Saudi) beralih memperkuat sektor pajak dan teknologi!
+              </p>
+            </div>
+          </div>
+          
+          <!-- Severe Drop Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-red-100">
+            <div class="bg-red-50/50 p-4 rounded-xl border border-red-100 text-center">
+              <span class="block text-xs text-red-600 font-bold uppercase tracking-wider">Anggaran Pendidikan</span>
+              <span class="text-lg font-black text-red-700 mt-1">Dipangkas Habis 📉</span>
+            </div>
+            <div class="bg-red-50/50 p-4 rounded-xl border border-red-100 text-center">
+              <span class="block text-xs text-red-600 font-bold uppercase tracking-wider">Subsidi BBM & Listrik</span>
+              <span class="text-lg font-black text-red-700 mt-1">Dicabut Total 🛑</span>
+            </div>
+            <div class="bg-red-50/50 p-4 rounded-xl border border-red-100 text-center">
+              <span class="block text-xs text-red-600 font-bold uppercase tracking-wider">Kesejahteraan</span>
+              <span class="text-lg font-black text-red-700 mt-1">Bergantung Utang Luar 💸</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION 4: REALITY CHECK (ANGGARAN VS KORUPSI) -->
+    <div class="bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <!-- Ambient light effect -->
+      <div class="absolute -right-32 -bottom-32 w-96 h-96 rounded-full bg-red-600/15 blur-3xl pointer-events-none"></div>
+      
+      <div class="max-w-3xl">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/25 text-red-400 text-xs font-bold uppercase tracking-wide border border-red-500/30">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i> REALITY CHECK
+        </span>
+        <h3 class="text-2xl md:text-3xl font-extrabold tracking-tight mt-3">Skala Anggaran Publik vs Anggaran Kerugian Korupsi</h3>
+        <p class="mt-2 text-slate-300 text-sm md:text-base leading-relaxed">
+          Korupsi wajib dibasmi tanpa toleransi! Namun secara logika data makro, sisa uang pajak yang sangat besar tetap aman dan setia digunakan setiap hari untuk membiayai subsidi listrik rumahmu, menambal aspal jalan rusak, serta membayar gaji jutaan guru dan petugas medis di Indonesia. Mari kita bandingkan proporsinya secara jujur!
+        </p>
+      </div>
+
+      <!-- Comparison layout -->
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- Left details cards -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="p-5 bg-slate-800/80 rounded-2xl border border-slate-700/50 transition-all hover:border-emerald-500/40">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-emerald-400 font-bold uppercase tracking-wider">🟢 Total Belanja APBN Berjalan</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">~92.5%</span>
+            </div>
+            <span class="block text-3xl font-black text-slate-50 mt-1">Rp3.621,3 Triliun</span>
+            <span class="text-xs text-slate-400 block mt-2">Seluruh perolehan dana dari patungan pajak masyarakat yang disalurkan murni untuk infrastruktur, operasional KIP Kuliah, subsidi pupuk petani, perlindungan sosial, dan dana desa.</span>
+          </div>
+
+          <div class="p-5 bg-slate-800/80 rounded-2xl border border-slate-700/50 transition-all hover:border-red-500/40">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-red-400 font-bold uppercase tracking-wider">🔴 Estimasi Rata-Rata Korupsi/Tahun</span>
+              <span class="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-bold">~7.5%</span>
+            </div>
+            <span class="block text-3xl font-black text-slate-50 mt-1">Rp290,38 Triliun</span>
+            <span class="text-xs text-slate-400 block mt-2">Dihitung dari estimasi akumulasi potensi kebocoran finansial nasional yang tercatat menembus Rp580,76 Triliun dalam kurun waktu 2024 hingga menjelang 2026 (~Rp290,38 Triliun/tahun).</span>
+          </div>
+        </div>
+
+        <!-- Right Bar Chart -->
+        <div class="lg:col-span-7 bg-slate-800/50 p-6 rounded-2xl border border-slate-800 flex flex-col justify-center min-h-[250px]">
+          <h4 class="text-sm font-bold text-slate-200 mb-4 text-center lg:text-left flex items-center justify-center lg:justify-start gap-2">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-red-500"></i> Perbandingan Visual Proporsi APBN Nasional
+          </h4>
+          <div class="h-44 relative">
+            <canvas id="realityChart"></canvas>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-4 leading-normal italic text-center lg:text-left">
+            *Rasio dihitung berdasarkan realisasi target Pendapatan & Belanja APBN terkini terhadap estimasi rata-rata kasus kerugian korupsi nasional.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-slate-900 text-slate-500 py-12 border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 text-center space-y-4">
+      <div class="flex justify-center items-center gap-2 text-white font-bold text-lg">
+        <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-xs font-bold text-white shadow-lg">ID</div>
+        Pajak Kita, Masa Depan Kita
+      </div>
+      <p class="text-xs max-w-lg mx-auto leading-relaxed text-slate-400">
+        Simulasi ini dirancang dengan pendekatan kreatif, interaktif, dan kasual untuk meningkatkan pemahaman masyarakat umum atas kontribusi penting perpajakan Indonesia.
+      </p>
+      <div class="text-[10px] text-slate-600 font-semibold tracking-wider">
+        &copy; 2026 APBN SIMULATOR • DILINDUNGI NEGARA SECARA TRANSPARAN
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // GLOBAL STATE MANAGEMENT
+    let currentNominal = 100000; // Rp100.000 as default
+    let isSdaModeActive = false; // Flag for SDA Simulator
+    let donutChartInstance = null;
+    let realityChartInstance = null;
+
+    // WEB AUDIO API SOUND GENERATORS
+    let audioContext = null;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    // Effect 1: Dramatic Alarm/Glitch Crash for "Andalkan SDA Saja"
+    function playWarningSound() {
+      try {
+        initAudio();
+        const duration = 0.9;
+        
+        // Low Warning Rumble
+        const osc1 = audioContext.createOscillator();
+        const osc1Gain = audioContext.createGain();
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(140, audioContext.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(35, audioContext.currentTime + duration);
+        
+        // High Alarm Siren Glitch
+        const osc2 = audioContext.createOscillator();
+        const osc2Gain = audioContext.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, audioContext.currentTime);
+        osc2.frequency.linearRampToValueAtTime(220, audioContext.currentTime + 0.3);
+        osc2.frequency.linearRampToValueAtTime(660, audioContext.currentTime + 0.6);
+        osc2.frequency.linearRampToValueAtTime(110, audioContext.currentTime + duration);
+
+        // Mix volume
+        const masterGain = audioContext.createGain();
+        masterGain.gain.setValueAtTime(0.18, audioContext.currentTime);
+        masterGain.gain.exponentialRampToValueAtTime(0.005, audioContext.currentTime + duration);
+
+        osc1.connect(osc1Gain);
+        osc1Gain.gain.setValueAtTime(0.6, audioContext.currentTime);
+        
+        osc2.connect(osc2Gain);
+        osc2Gain.gain.setValueAtTime(0.4, audioContext.currentTime);
+
+        osc1Gain.connect(masterGain);
+        osc2Gain.connect(masterGain);
+        masterGain.connect(audioContext.destination);
+
+        osc1.start();
+        osc2.start();
+        osc1.stop(audioContext.currentTime + duration);
+        osc2.stop(audioContext.currentTime + duration);
+      } catch (e) {
+        console.log("Audio play blocked or unsupported:", e);
+      }
+    }
+
+    // Effect 2: Cheerful Harmony Ascending Chime for "Struktur Pajak Nyata"
+    function playSuccessSound() {
+      try {
+        initAudio();
+        const now = audioContext.currentTime;
+        
+        // Arpeggio sound
+        const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+        
+        notes.forEach((freq, idx) => {
+          const osc = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+          
+          gainNode.gain.setValueAtTime(0, now);
+          gainNode.gain.linearRampToValueAtTime(0.1, now + (idx * 0.08) + 0.02);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.35);
+          
+          osc.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          osc.start(now + (idx * 0.08));
+          osc.stop(now + (idx * 0.08) + 0.4);
+        });
+      } catch (e) {
+        console.log("Audio play blocked or unsupported:", e);
+      }
+    }
+
+    // REAL SECTORS DEFINITION WITH % AND DYNAMIC DESCRIPTIONS
+    const sectorsList = [
+      {
+        id: 'pendidikan',
+        name: 'Pendidikan',
+        percentage: 20,
+        color: '#3b82f6', 
+        lightBg: '#eff6ff',
+        icon: 'graduation-cap',
+        tragicValue: 2,
+        desc: 'Anggaran ini langsung lari buat renovasi sekolah rusak, operasional BOS biar sekolah makin terjangkau, penyediaan beasiswa anak-anak kurang mampu, hingga pembinaan kualitas guru di seluruh pelosok tanah air.',
+        tragicDesc: 'Duit Rp2 perak boro-boro buat bayar guru honorer atau renovasi sekolah rubuh, dapet selembar kertas fotokopian soal ujian aja kagak cukup!'
+      },
+      {
+        id: 'subsidi',
+        name: 'Perlindungan Sosial & Subsidi',
+        percentage: 18,
+        color: '#f59e0b', 
+        lightBg: '#fef3c7',
+        icon: 'hand-helping',
+        tragicValue: 1,
+        desc: 'Duit segini dipakai buat mastiin gas melon 3kg dan token listrik tetap dapet potongan subsidi di masyarakat, bantuan sosial Program Keluarga Harapan (PKH), dan bantuan darurat pangan.',
+        tragicDesc: 'Uang Rp1 perak buat subsidi? Boro-boro meringankan bensin dan gas melon, denger desisan uap tabung gasnya aja gak dapet!'
+      },
+      {
+        id: 'infrastruktur',
+        name: 'Infrastruktur & Fasilitas Umum',
+        percentage: 16,
+        color: '#10b981', 
+        lightBg: '#ecfdf5',
+        icon: 'construction',
+        tragicValue: 3,
+        desc: 'Dipakai buat bangun jalan tol, jembatan, perbaikan jalan rusak di daerah, transportasi umum yang nyaman, hingga pembangunan sanitasi air bersih untuk desa terpencil.',
+        tragicDesc: 'Punya Rp3 perak cuma dapet sebutir pasir aspal jalanan. Jembatan gantung yang nyaris putus terpaksa ditutup total selamanya!'
+      },
+      {
+        id: 'keamanan',
+        name: 'Pertahanan & Keamanan',
+        percentage: 10,
+        color: '#8b5cf6', 
+        lightBg: '#f5f3ff',
+        icon: 'shield',
+        tragicValue: 2,
+        desc: 'Untuk operasional kapal patroli penjaga laut dari pencurian ikan, radar pengawas udara, perlengkapan taktis prajurit, serta menjaga kondisi kamtibmas agar kita tidur nyenyak tiap malam.',
+        tragicDesc: 'Anggaran Rp2 perak buat pelindung kedaulatan? Bahkan buat bayar uang iuran ronda pos satpam komplek aja masih kurang!'
+      },
+      {
+        id: 'kesehatan',
+        name: 'Kesehatan',
+        percentage: 5,
+        color: '#ef4444', 
+        lightBg: '#fef2f2',
+        icon: 'heart-pulse',
+        tragicValue: 0.5,
+        desc: 'Dipakai untuk membiayai pengobatan jutaan warga gratis lewat subsidi BPJS Kesehatan, renovasi puskesmas keliling, penyediaan obat generik murah, serta program pencegahan stunting balita.',
+        tragicDesc: 'Uang 50 sen (Rp0,5) boro-boro buat nebus obat BPJS atau pasang infus, dapet sepotong kapas bulat mini di apotek aja ditolak kasir!'
+      },
+      {
+        id: 'pelayanan',
+        name: 'Pelayanan Umum & Transfer Daerah',
+        percentage: 31,
+        color: '#64748b', 
+        lightBg: '#f8fafc',
+        icon: 'landmark',
+        tragicValue: 5,
+        desc: 'Alokasikan langsung ke pemerintah daerah tempat tinggalmu untuk pengerjaan proyek lokal, peningkatan pelayanan kantor kelurahan, pembayaran gaji aparatur publik, serta aspal jalan desa.',
+        tragicDesc: 'Uang Rp5 perak dikirim ke kas pemerintah daerah? Bahkan buat patungan beli amplop dinas pak lurah pun masih harus berutang!'
+      }
+    ];
+
+    // INITIALIZATION ON DOM READY
+    window.addEventListener('DOMContentLoaded', () => {
+      // Create Lucide Icons
+      lucide.createIcons();
+      
+      // Load interactive breakdown cards
+      buildSectorGrid();
+
+      // Mask and format inputs
+      const txtInput = document.getElementById('pajakInput');
+      txtInput.addEventListener('input', function() {
+        let numericValue = cleanNumeric(this.value);
+        if (numericValue === 0) {
+          this.value = '';
+        } else {
+          this.value = numericValue.toLocaleString('id-ID');
+        }
+        currentNominal = numericValue;
+        triggerDataUpdate();
+      });
+
+      document.getElementById('btnCek').addEventListener('click', () => {
+        let numericValue = cleanNumeric(txtInput.value);
+        if (numericValue > 0) {
+          currentNominal = numericValue;
+          triggerDataUpdate();
+        }
+      });
+
+      // Build initial Charts
+      initDonutChart();
+      initRealityChart();
+
+      // Autoselect first item (Pendidikan)
+      selectSector('pendidikan');
+    });
+
+    // Helper functions
+    function cleanNumeric(str) {
+      return parseInt(str.replace(/\D/g, '')) || 0;
+    }
+
+    // Dynamic scale helper that switches calculations based on Simulator mode
+    function getSectorValue(sector) {
+      if (isSdaModeActive) {
+        return sector.tragicValue;
+      }
+      return currentNominal * (sector.percentage / 100);
+    }
+
+    function formatRupiah(num) {
+      if (num < 10) {
+        return 'Rp' + num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      }
+      return 'Rp' + Math.round(num).toLocaleString('id-ID');
+    }
+
+    function setNominal(val) {
+      currentNominal = val;
+      document.getElementById('pajakInput').value = val.toLocaleString('id-ID');
+      triggerDataUpdate();
+    }
+
+    // Build static selection cards
+    function buildSectorGrid() {
+      const container = document.getElementById('sectorsContainer');
+      container.innerHTML = '';
+
+      sectorsList.forEach(sector => {
+        const valueShare = getSectorValue(sector);
+        const cardBtn = document.createElement('button');
+        cardBtn.id = `card-${sector.id}`;
+        cardBtn.className = "flex items-center gap-3.5 p-4 bg-white hover:bg-slate-50 border border-slate-100 rounded-2xl text-left transition-all hover:-translate-y-0.5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-300 w-full shadow-sm";
+        cardBtn.onclick = () => selectSector(sector.id);
+
+        cardBtn.innerHTML = `
+          <div class="p-3 rounded-xl flex-shrink-0" style="background-color: ${sector.lightBg}; color: ${sector.color}">
+            <i data-lucide="${sector.icon}" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-center gap-1">
+              <span class="text-xs font-bold text-slate-800 truncate">${sector.name}</span>
+              <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full" id="percent-${sector.id}" style="background-color: ${sector.lightBg}; color: ${sector.color}">${sector.percentage}%</span>
+            </div>
+            <span class="text-sm font-black text-slate-700 mt-1 block transition-all duration-300" id="cost-${sector.id}">
+              ${formatRupiah(valueShare)}
+            </span>
+          </div>
+        `;
+        container.appendChild(cardBtn);
+      });
+      lucide.createIcons();
+    }
+
+    // Interactive event when sector gets active
+    function selectSector(sectorId) {
+      const sector = sectorsList.find(s => s.id === sectorId);
+      if (!sector) return;
+
+      // Update Active State on UI Buttons
+      sectorsList.forEach(s => {
+        const btn = document.getElementById(`card-${s.id}`);
+        if (s.id === sectorId) {
+          btn.classList.remove('border-slate-100', 'bg-white');
+          btn.classList.add('border-slate-950', 'bg-slate-50', 'ring-4', 'ring-slate-900/5');
+        } else {
+          btn.classList.add('border-slate-100', 'bg-white');
+          btn.classList.remove('border-slate-950', 'bg-slate-50', 'ring-4', 'ring-slate-900/5');
+        }
+      });
+
+      // Update Detail Banner Title, Badges and Micro-copy
+      const valueShare = getSectorValue(sector);
+      document.getElementById('activeSectorBadge').innerText = isSdaModeActive ? `KRISIS: ${sector.name} (KOLAPS)` : `SEKTOR: ${sector.name} (${sector.percentage}%)`;
+      document.getElementById('activeSectorTitle').innerText = sector.name;
+      document.getElementById('activeSectorDesc').innerText = isSdaModeActive ? sector.tragicDesc : sector.desc;
+      document.getElementById('activeSectorValue').innerText = formatRupiah(valueShare);
+
+      // Highlight Slice inside Chart.js
+      if (donutChartInstance) {
+        const index = sectorsList.findIndex(s => s.id === sectorId);
+        donutChartInstance.setActiveElements([{ datasetIndex: 0, index: index }]);
+        donutChartInstance.tooltip.setActiveElements([{ datasetIndex: 0, index: index }], { x: 0, y: 0 });
+        donutChartInstance.update();
+      }
+    }
+
+    // Trigger update on state change (nominal change or toggle simulator)
+    function triggerDataUpdate() {
+      // Update Center Label inside Donut
+      document.getElementById('centerTotalLabel').innerText = isSdaModeActive ? "Anjlok!" : formatRupiah(currentNominal);
+
+      // Update cost elements on Cards dynamically to match current simulation state
+      sectorsList.forEach(sector => {
+        const valueShare = getSectorValue(sector);
+        const costEl = document.getElementById(`cost-${sector.id}`);
+        if (costEl) costEl.innerText = formatRupiah(valueShare);
+
+        // Change badge label to warn collapse if SDA mode is active
+        const badgeEl = document.getElementById(`percent-${sector.id}`);
+        if (badgeEl) {
+          if (isSdaModeActive) {
+            badgeEl.innerText = "Kolaps";
+            badgeEl.style.backgroundColor = "#fee2e2";
+            badgeEl.style.color = "#ef4444";
+          } else {
+            badgeEl.innerText = `${sector.percentage}%`;
+            badgeEl.style.backgroundColor = sector.lightBg;
+            badgeEl.style.color = sector.color;
+          }
+        }
+      });
+
+      // Update active selected banner contents to match the current selected sector calculations
+      const activeCard = document.querySelector('[id^="card-"].border-slate-950');
+      if (activeCard) {
+        const activeId = activeCard.id.replace('card-', '');
+        const sector = sectorsList.find(s => s.id === activeId);
+        if (sector) {
+          const valueShare = getSectorValue(sector);
+          document.getElementById('activeSectorBadge').innerText = isSdaModeActive ? `KRISIS: ${sector.name} (KOLAPS)` : `SEKTOR: ${sector.name} (${sector.percentage}%)`;
+          document.getElementById('activeSectorDesc').innerText = isSdaModeActive ? sector.tragicDesc : sector.desc;
+          document.getElementById('activeSectorValue').innerText = formatRupiah(valueShare);
+        }
+      }
+
+      // Refresh donut dataset with animations
+      if (donutChartInstance) {
+        let newDataset = [];
+        if (isSdaModeActive) {
+          // Collapse values representing an economic shock
+          newDataset = sectorsList.map(s => s.tragicValue); 
+        } else {
+          // Healthy normal values
+          newDataset = sectorsList.map(s => currentNominal * (s.percentage / 100));
+        }
+        donutChartInstance.data.datasets[0].data = newDataset;
+        donutChartInstance.update();
+      }
+    }
+
+    // INITIALIZE CHART.JS: Donut
+    function initDonutChart() {
+      const ctx = document.getElementById('pajakDonutChart').getContext('2d');
+      const dataset = sectorsList.map(s => getSectorValue(s));
+      const colors = sectorsList.map(s => s.color);
+      const labels = sectorsList.map(s => s.name);
+
+      donutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataset,
+            backgroundColor: colors,
+            hoverOffset: 12,
+            borderWidth: 4,
+            borderColor: '#ffffff',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let val = context.raw;
+                  return ` ${context.label}: ${formatRupiah(val)}`;
+                }
+              }
+            }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const sectorId = sectorsList[idx].id;
+              selectSector(sectorId);
+            }
+          },
+          cutout: '74%'
+        }
+      });
+    }
+
+    // INITIALIZE CHART.JS: Horizontal Bar
+    function initRealityChart() {
+      const ctx = document.getElementById('realityChart').getContext('2d');
+      realityChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Sisa Nyata Belanja Publik', 'Rata-rata Korupsi Per Tahun'],
+          datasets: [{
+            data: [3330.92, 290.38], // Trillion Rupiah
+            backgroundColor: ['#10b981', '#ef4444'], // Green for Publik, Red for Korupsi
+            borderRadius: 6,
+            barThickness: 28
+          }]
+        },
+        options: {
+          indexAxis: 'y', // Horizontal Layout
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` Rp${context.raw.toLocaleString('id-ID')} Triliun`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#334155' },
+              ticks: {
+                color: '#94a3b8',
+                callback: function(val) {
+                  return 'Rp' + val + ' T';
+                }
+              }
+            },
+            y: {
+              grid: { display: false },
+              ticks: {
+                color: '#f8fafc',
+                font: { weight: 'bold', size: 10 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // TOGGLE MODE SIMULATOR (Pajak Nyata vs SDA Only)
+    function setSimulatorMode(mode) {
+      isSdaModeActive = (mode === 'sda');
+      
+      const btnReal = document.getElementById('btnRealStructure');
+      const btnSda = document.getElementById('btnSdaOnly');
+      const stateNormal = document.getElementById('stateNormal');
+      const stateUnstable = document.getElementById('stateUnstable');
+      const chartCard = document.getElementById('chartCard');
+      const chartTitle = document.getElementById('chartTitle');
+      const centerLabelTop = document.getElementById('centerLabelTop');
+      const activeLabelBottom = document.getElementById('activeLabelBottom');
+
+      if (isSdaModeActive) {
+        // PLAY DRAMATIC WARNING SOUND
+        playWarningSound();
+
+        // Switch buttons layout
+        btnSda.className = "flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 bg-orange-500 text-white shadow-md shadow-orange-500/30";
+        btnReal.className = "flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800";
+        
+        // Show unstable layout info
+        stateNormal.classList.add('hidden');
+        stateUnstable.classList.remove('hidden');
+
+        // Apply shake animation class to chartcard
+        chartCard.classList.add('unstable-wiggle', 'border-red-500/20');
+        chartTitle.innerHTML = `<span class="text-red-500 font-extrabold flex items-center justify-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4 animate-bounce"></i> Anggaran Kolaps</span>`;
+        centerLabelTop.innerText = "KEUANGAN";
+        activeLabelBottom.innerText = "Hasil Patungan (Kolaps):";
+
+        // Instantly force-select current active sector to refresh card texts & tragic values
+        const activeCard = document.querySelector('[id^="card-"].border-slate-950');
+        const activeId = activeCard ? activeCard.id.replace('card-', '') : 'pendidikan';
+        selectSector(activeId);
+      } else {
+        // PLAY HAPPY SUCCESS CHIME SOUND
+        playSuccessSound();
+
+        // Reset to normal structured state
+        btnReal.className = "flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 bg-white text-slate-800 shadow-sm";
+        btnSda.className = "flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800";
+
+        stateNormal.classList.remove('hidden');
+        stateUnstable.classList.add('hidden');
+
+        // Clean shake animations
+        chartCard.classList.remove('unstable-wiggle', 'border-red-500/20');
+        chartTitle.innerText = "Kue Distribusi Alokasi";
+        centerLabelTop.innerText = "Porsi Kamu";
+        activeLabelBottom.innerText = "Hasil Patunganmu:";
+
+        // Force select to refresh normal text
+        const activeCard = document.querySelector('[id^="card-"].border-slate-950');
+        const activeId = activeCard ? activeCard.id.replace('card-', '') : 'pendidikan';
+        selectSector(activeId);
+      }
+
+      triggerDataUpdate();
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
+
+```
